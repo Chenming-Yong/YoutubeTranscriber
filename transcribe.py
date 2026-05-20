@@ -43,7 +43,7 @@ def transcribe(audio_path: str, language: str, model_name: str) -> dict:
     print(f"Loading Whisper model '{model_name}'...")
     model = whisper.load_model(model_name)
     print("Transcribing... (this may take a while)")
-    result = model.transcribe(audio_path, language=None if language == "auto" else language, verbose=False)
+    result = model.transcribe(audio_path, language=language, verbose=False)
     return result
 
 
@@ -84,7 +84,7 @@ def main():
     parser.add_argument("url", help="YouTube video URL")
     parser.add_argument(
         "--language", "-l", default="zh",
-        help="Language code (default: zh for Mandarin). Use 'en' for English, 'auto' to detect automatically, etc."
+        help="Language code (default: zh for Mandarin). Use 'en' for English, etc."
     )
     parser.add_argument(
         "--model", "-m", default="medium",

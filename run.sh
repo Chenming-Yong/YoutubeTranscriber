@@ -13,6 +13,15 @@ if [ ! -d "$VENV_DIR" ]; then
     echo "Setup complete."
 fi
 
+# Prompt for language
+echo "Language: [1] Mandarin (default)  [2] English"
+read -p "Choose (1/2): " lang_choice
+if [ "$lang_choice" = "2" ]; then
+    LANG_FLAG="--language en"
+else
+    LANG_FLAG="--language zh"
+fi
+
 # Activate and run
 source "$VENV_DIR/bin/activate"
-python "$SCRIPT_DIR/transcribe.py" "$@"
+python "$SCRIPT_DIR/transcribe.py" $LANG_FLAG "$@"
