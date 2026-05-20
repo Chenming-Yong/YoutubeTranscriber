@@ -44,5 +44,5 @@ The tool is a single-file CLI (`transcribe.py`) with three stages that run seque
 - **SSL bypass** — `ssl._create_default_https_context = ssl._create_unverified_context` is set at import time to handle corporate proxies with self-signed certificates. This only affects the Whisper model download via Python's `urllib`.
 - **venv is local** — `run.sh` creates `venv/` inside the project directory on first run. Delete it to force a clean reinstall.
 - **Model cache is global** — Whisper models live in `~/.cache/whisper/` and are shared across projects. `medium` is ~1.42 GB.
-- **Default language is Mandarin** (`zh`) — pass `--language en` or another ISO 639-1 code to change it.
+- **Default language is Mandarin** (`zh`) — pass `--language en` or another ISO 639-1 code to change it. Use `--language auto` to let Whisper detect the language automatically (slightly slower).
 - **Audio is not auto-deleted** — MP3s in `input/` persist after transcription and must be deleted manually.
