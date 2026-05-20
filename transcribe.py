@@ -32,12 +32,15 @@ def download_audio(url: str, output_path: str) -> str:
         }],
         "quiet": True,
         "no_warnings": True,
-        "cookiesfrombrowser": ("chrome",),
+        "extractor_args": {
+            "youtube": {"player_client": ["android", "web"]},
+        },
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
         title = info.get("title", "video")
-    return title
+        video_id = info.get("id", "video")
+    return title, video_id
 
 
 def transcribe(audio_path: str, language: str, model_name: str) -> dict:
@@ -102,11 +105,9 @@ def main():
     INPUT_DIR.mkdir(exist_ok=True)
     OUTPUT_DIR.mkdir(exist_ok=True)
 
-    safe_name = _safe_filename(args.url.split("v=")[-1].split("&")[0])
-    audio_path = str(INPUT_DIR / safe_name)
-
     print(f"Downloading audio from: {args.url}")
-    title = download_audio(args.url, audio_path)
+    title, video_id = download_audio(args.url, str(INPUT_DIR / "%(id)s"))
+    audio_path = str(INPUT_DIR / video_id)
     audio_file = audio_path + ".mp3"
 
     if not os.path.exists(audio_file):

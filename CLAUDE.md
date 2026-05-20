@@ -10,6 +10,9 @@ Always use `run.sh` — it handles venv creation, activation, and dependency ins
 # Always quote the URL to prevent shell glob expansion on ? and &
 ./run.sh "https://www.youtube.com/watch?v=VIDEO_ID"
 
+# YouTube Shorts are also supported
+./run.sh "https://youtube.com/shorts/VIDEO_ID"
+
 # Common options
 ./run.sh "URL" --language zh --model medium --format txt
 ./run.sh "URL" --model large --format srt
@@ -75,3 +78,15 @@ The model cache is global and shared across projects. Delete `~/.cache/whisper/`
 - **venv is local** — `run.sh` creates `venv/` inside the project directory on first run. Delete it to force a clean reinstall.
 - **Language prompt** — `run.sh` asks you to choose Mandarin or English before running. You can still pass `--language` directly to `transcribe.py` for other languages.
 - **Audio is not auto-deleted** — MP3s in `input/` persist after transcription and must be deleted manually.
+- **Audio filename uses video ID** — the MP3 in `input/` is named by the YouTube video ID (e.g. `TEMPASzpCRs.mp3`), not the URL, so it works correctly for both regular videos and Shorts.
+
+## Known issues and fixes
+
+### Bot detection (`Sign in to confirm you're not a bot`)
+YouTube blocks yt-dlp's default web client. Fixed by using the **Android client** (`player_client: ["android", "web"]` in ydl_opts), which YouTube treats as a mobile app and does not bot-check.
+
+### n-challenge / format not available
+YouTube obfuscates its streaming URLs with a JavaScript challenge. Solving it requires a JS runtime (Node.js) plus a separate EJS distribution plugin — the plugin does not yet exist on PyPI. The Android client **bypasses this entirely** because it uses a simpler, unobfuscated streaming format. Installing Node.js alone is not sufficient.
+
+### YouTube Shorts URL filename mangling
+The original code extracted the video ID by splitting the URL on `v=`, which only works for `watch?v=ID` links. Shorts use `/shorts/ID` format, so the whole URL was being used as the filename. Fixed by using the `id` field returned by yt-dlp's info dict, which always gives the clean video ID regardless of URL format.
