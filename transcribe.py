@@ -2,7 +2,6 @@ import argparse
 import os
 import ssl
 import sys
-import tempfile
 from pathlib import Path
 
 # Bypass SSL verification for model download (self-signed cert in network chain)
@@ -17,6 +16,9 @@ try:
     import whisper
 except ImportError:
     sys.exit("Missing dependency: pip install openai-whisper")
+
+INPUT_DIR = Path(__file__).parent / "input"
+OUTPUT_DIR = Path(__file__).parent / "output"
 
 
 def download_audio(url: str, output_path: str) -> str:
@@ -94,26 +96,27 @@ def main():
         choices=["txt", "srt", "vtt"],
         help="Output format (default: txt)"
     )
-    parser.add_argument(
-        "--output", "-o", default=None,
-        help="Output file path (default: <video_title>.<format>)"
-    )
     args = parser.parse_args()
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        audio_path = os.path.join(tmpdir, "audio")
+    INPUT_DIR.mkdir(exist_ok=True)
+    OUTPUT_DIR.mkdir(exist_ok=True)
 
-        print(f"Downloading audio from: {args.url}")
-        title = download_audio(args.url, audio_path)
-        audio_file = audio_path + ".mp3"
+    safe_name = _safe_filename(args.url.split("v=")[-1].split("&")[0])
+    audio_path = str(INPUT_DIR / safe_name)
 
-        if not os.path.exists(audio_file):
-            sys.exit("Audio download failed — check the URL and that ffmpeg is installed.")
+    print(f"Downloading audio from: {args.url}")
+    title = download_audio(args.url, audio_path)
+    audio_file = audio_path + ".mp3"
 
-        result = transcribe(audio_file, args.language, args.model)
+    if not os.path.exists(audio_file):
+        sys.exit("Audio download failed — check the URL and that ffmpeg is installed.")
 
-    output_file = args.output or f"{_safe_filename(title)}.{args.format}"
-    save_transcript(result, output_file, args.format)
+    print(f"Audio saved to: {audio_file}")
+
+    result = transcribe(audio_file, args.language, args.model)
+
+    output_file = OUTPUT_DIR / f"{_safe_filename(title)}.{args.format}"
+    save_transcript(result, str(output_file), args.format)
 
     print(f"\nDone! Transcript saved to: {output_file}")
     print(f"Total segments: {len(result['segments'])}")
